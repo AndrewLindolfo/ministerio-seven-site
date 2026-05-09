@@ -546,3 +546,228 @@
 
 
 .programacao-hide-after { opacity: .85; }
+
+
+.programacao-box{
+  position:relative;
+  overflow:hidden;
+  padding:20px 22px 18px;
+}
+
+.programacao-box-topline{
+  width:72px;
+  height:4px;
+  border-radius:999px;
+  background:linear-gradient(90deg, var(--primary), rgba(255,255,255,.45));
+  margin-bottom:14px;
+  opacity:.95;
+}
+
+.programacao-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.programacao-header-main{
+  min-width:0;
+  display:grid;
+  gap:10px;
+}
+
+.programacao-box h3{
+  margin:0;
+  font-size:clamp(1.28rem, 1.8vw, 1.6rem);
+  line-height:1.15;
+  letter-spacing:-.02em;
+}
+
+.programacao-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.programacao-meta-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:34px;
+  padding:7px 12px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:rgba(255,255,255,.03);
+  color:var(--text-soft);
+  font-size:.95rem;
+}
+
+.programacao-meta-icon{
+  opacity:.92;
+}
+
+.programacao-countdown{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,77,77,.12);
+  border:1px solid rgba(255,77,77,.26);
+  color:#ffd6d6;
+  font-weight:700;
+  white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.programacao-lista{
+  display:grid;
+  gap:4px;
+}
+
+.programacao-item{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:6px 0;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+
+.programacao-item:first-child{
+  border-top:0;
+  padding-top:0;
+}
+
+.programacao-item-main{
+  min-width:0;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  flex:1 1 auto;
+}
+
+.programacao-item-number{
+  flex:0 0 auto;
+  width:28px;
+  height:28px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  font-weight:800;
+  font-size:.92rem;
+  color:var(--text-soft);
+}
+
+.programacao-item-title{
+  padding-top:1px;
+  line-height:1.32;
+}
+
+.programacao-links{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.programacao-link-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  padding:7px 11px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  text-decoration:none;
+  font-size:.94rem;
+  transition:transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.programacao-link-chip:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,.06);
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
+
+.programacao-link-chip--vocal{
+  border-color:rgba(180,160,255,.25);
+}
+
+.programacao-link-chip--banda{
+  border-color:rgba(255,120,160,.22);
+}
+
+.programacao-link-chip--muted{
+  opacity:.78;
+  cursor:default;
+}
+
+.programacao-link-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  font-size:.95rem;
+}
+
+@media (max-width: 900px){
+  .programacao-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .programacao-countdown{
+    white-space:normal;
+  }
+
+  .programacao-item{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .programacao-links{
+    justify-content:flex-start;
+  }
+}
+
+@media (max-width: 600px){
+  .programacao-box{
+    padding:18px 16px 16px;
+    border-radius:20px;
+  }
+
+  .programacao-box-topline{
+    width:58px;
+    margin-bottom:12px;
+  }
+
+  .programacao-meta-chip,
+  .programacao-link-chip,
+  .programacao-countdown{
+    min-height:32px;
+    padding:6px 10px;
+    font-size:.9rem;
+  }
+
+  .programacao-item-main{
+    gap:10px;
+  }
+
+  .programacao-item-number{
+    width:26px;
+    height:26px;
+    font-size:.86rem;
+  }
+}

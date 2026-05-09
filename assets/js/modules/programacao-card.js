@@ -11,7 +11,7 @@ function escapeHtml(text = "") {
 function normalize(value = "") {
   return String(value || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .trim();
 }
@@ -77,38 +77,86 @@ function resolveExistingCifra(song = {}, cifraIndex = []) {
   }) || null;
 }
 
-function renderSongLine(song = {}, index = 0, cifraIndex = []) {
-  const existingCifra = resolveExistingCifra(song, cifraIndex);
-  const vocalHtml = song.slug
-    ? `<a href="./musica.html?slug=${song.slug}">🎤 Vocal</a>`
-    : `<span>🎤 Vocal</span>`;
-
-  const bandaHtml = existingCifra?.slug
-    ? `<a href="./cifra.html?slug=${existingCifra.slug}">🎸 Banda</a>`
-    : `<button type="button" disabled>Em breve</button>`;
+function renderVocalLink(song = {}) {
+  if (song.slug) {
+    return `
+      <a class="programacao-link-chip programacao-link-chip--vocal" href="./musica.html?slug=${song.slug}">
+        <span class="programacao-link-icon" aria-hidden="true">🎤</span>
+        <span>Vocal</span>
+      </a>
+    `;
+  }
 
   return `
-    <p class="programacao-item">
-      <span>${index + 1}. ${escapeHtml(song.title || "")}</span>
-      <span class="programacao-links">
-        ${vocalHtml}
-        |
-        ${bandaHtml}
-      </span>
-    </p>
+    <span class="programacao-link-chip programacao-link-chip--muted">
+      <span class="programacao-link-icon" aria-hidden="true">🎤</span>
+      <span>Vocal</span>
+    </span>
+  `;
+}
+
+function renderBandaLink(song = {}, cifraIndex = []) {
+  const existingCifra = resolveExistingCifra(song, cifraIndex);
+  if (existingCifra?.slug) {
+    return `
+      <a class="programacao-link-chip programacao-link-chip--banda" href="./cifra.html?slug=${existingCifra.slug}">
+        <span class="programacao-link-icon" aria-hidden="true">🎸</span>
+        <span>Banda</span>
+      </a>
+    `;
+  }
+
+  return `
+    <span class="programacao-link-chip programacao-link-chip--muted">
+      <span class="programacao-link-icon" aria-hidden="true">🎸</span>
+      <span>Em breve</span>
+    </span>
+  `;
+}
+
+function renderSongLine(song = {}, index = 0, cifraIndex = []) {
+  return `
+    <div class="programacao-item">
+      <div class="programacao-item-main">
+        <span class="programacao-item-number">${index + 1}</span>
+        <span class="programacao-item-title">${escapeHtml(song.title || "")}</span>
+      </div>
+      <div class="programacao-links">
+        ${renderVocalLink(song)}
+        ${renderBandaLink(song, cifraIndex)}
+      </div>
+    </div>
   `;
 }
 
 function renderProgramacaoBox(item = {}, isFirst = false, cifraIndex = []) {
   const countdown = buildCountdown(item.date, item.time);
+  const songs = Array.isArray(item.songs) ? item.songs : [];
+  const metaParts = [
+    { icon: '📅', text: fmtDate(item.date) },
+    { icon: '🕘', text: item.time || '--:--' },
+    item.location ? { icon: '📍', text: item.location } : null
+  ].filter(Boolean);
 
   return `
     <div class="programacao-box${isFirst ? " programacao-box--primary" : ""}">
-      <h3>${escapeHtml(item.title || "Programação")}</h3>
-      <p>${escapeHtml(fmtDate(item.date))} | ${escapeHtml(item.time || "--:--")}${item.location ? " | " + escapeHtml(item.location) : ""}</p>
-      ${countdown ? `<p class="programacao-countdown">${escapeHtml(countdown)}</p>` : ""}
+      <div class="programacao-box-topline"></div>
+      <div class="programacao-header">
+        <div class="programacao-header-main">
+          <h3>${escapeHtml(item.title || "Programação")}</h3>
+          <div class="programacao-meta">
+            ${metaParts.map((part) => `
+              <span class="programacao-meta-chip">
+                <span class="programacao-meta-icon" aria-hidden="true">${part.icon}</span>
+                <span>${escapeHtml(part.text)}</span>
+              </span>
+            `).join('')}
+          </div>
+        </div>
+        ${countdown ? `<span class="programacao-countdown">${escapeHtml(countdown)}</span>` : ''}
+      </div>
       <div class="programacao-lista">
-        ${(item.songs || []).map((song, index) => renderSongLine(song, index, cifraIndex)).join("")}
+        ${songs.map((song, index) => renderSongLine(song, index, cifraIndex)).join("")}
       </div>
     </div>
   `;
