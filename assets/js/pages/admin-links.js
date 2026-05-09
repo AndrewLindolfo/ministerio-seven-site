@@ -1,4 +1,5 @@
 import { getSiteConfig, saveSiteConfig } from "../services/config-service.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const form = document.getElementById("admin-links-form") || document.getElementById("admin-config-form");
@@ -25,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       officialEmail: (document.getElementById("email-oficial") || document.getElementById("config-email"))?.value || "",
       agendaEmbed: (document.getElementById("agenda-embed") || document.getElementById("config-agenda"))?.value || ""
     });
+    await recordAdminActivity({ action: "update", module: "links", itemId: "site", itemName: "Links do site" });
     alert("Links salvos com sucesso.");
   });
 });

@@ -1,6 +1,7 @@
 import { watchAuth, getAdminProfileByEmail } from "../auth.js";
 import { hasPermission } from "../services/admin-permissions-service.js";
 import { listNotificacoes, saveNotificacao, removeNotificacao, getNotificacao } from "../services/notificacoes-service.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 function formatDateTime(value = "") {
   if (!value) return "Sem data definida";
@@ -18,6 +19,10 @@ function escapeHtml(value = "") {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function formatMultilineHtml(value = "") {
+  return escapeHtml(value).replace(/\r?\n/g, "<br>");
 }
 
 
@@ -111,7 +116,7 @@ async function renderList() {
           <strong>${escapeHtml(item.title || "Sem título")}</strong>
           <span class="notificacao-chip tipo-${escapeHtml(item.type || item.tipo || "aviso")}">${escapeHtml(item.type || item.tipo || "aviso")}</span>
         </div>
-        <p>${escapeHtml(item.message || "")}</p>
+        <p>${formatMultilineHtml(item.message || "")}</p>
         <div class="admin-notificacao-meta">
           <span>Início: ${formatDateTime(item.startsAt)}</span>
           <span>Fim: ${item.expiresAt ? formatDateTime(item.expiresAt) : "Sem expiração"}</span>
@@ -139,7 +144,10 @@ async function renderList() {
   box.querySelectorAll("[data-delete-id]").forEach((button) => {
     button.addEventListener("click", async () => {
       if (!confirm("Deseja excluir esta notificação?")) return;
-      await removeNotificacao(button.dataset.deleteId);
+      const id = button.dataset.deleteId;
+      const item = await getNotificacao(id);
+      await removeNotificacao(id);
+      await recordAdminActivity({ action: "delete", module: "notificacoes", itemId: id, itemName: item?.title || "Notificação" });
       alert("🗑️ Notificação excluída com sucesso!");
       await renderList();
     });
@@ -170,7 +178,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    await saveNotificacao(payload, id);
+    const savedId = await saveNotificacao(payload, id);
+    await recordAdminActivity({ action: id ? "update" : "create", module: "notificacoes", itemId: savedId, itemName: payload.title });
     alert(id ? "✅ Notificação atualizada com sucesso!" : "✅ Notificação criada com sucesso!");
     resetForm();
     await renderList();

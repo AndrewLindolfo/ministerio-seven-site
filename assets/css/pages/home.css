@@ -8,12 +8,14 @@
 }
 
 .programacao-section h2,
+.ensaio-section h2,
 .destaques-section h2{
   font-size:clamp(1.5rem,2vw,2rem);
   margin-bottom:18px;
 }
 
 #programacao-card,
+#ensaio-home-card,
 #destaques-grid{
   display:grid;
   gap:16px;
@@ -220,6 +222,7 @@
   font-size:1.06rem;
   line-height:1.72;
   color:var(--popup-accent-text);
+  white-space:pre-line;
 }
 
 .notificacao-popup-close{
@@ -540,3 +543,6 @@
 [data-theme="light"] .notificacao-publica-card p{
   color: #475569;
 }
+
+
+.programacao-hide-after { opacity: .85; }

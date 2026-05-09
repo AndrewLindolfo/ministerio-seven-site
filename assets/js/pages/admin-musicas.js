@@ -1,6 +1,7 @@
 import { watchAuth, getAdminProfileByEmail } from "../auth.js";
 import { hasPermission, isPrimaryAdmin } from "../services/admin-permissions-service.js";
 import { listMusicas, removeMusica } from "../services/musicas-service.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 async function renderMusicas() {
   const box = document.getElementById("admin-musicas-list");
@@ -27,7 +28,9 @@ async function renderMusicas() {
   box.querySelectorAll("[data-delete-id]").forEach((button) => {
     button.addEventListener("click", async () => {
       if (!confirm("Deseja excluir esta música?")) return;
+      const item = filtered.find((entry) => entry.id === button.dataset.deleteId);
       await removeMusica(button.dataset.deleteId);
+      await recordAdminActivity({ action: "delete", module: "musicas", itemId: button.dataset.deleteId, itemName: item?.title || "Música" });
       alert("🗑️ Música excluída com sucesso!");
       await renderMusicas();
     });

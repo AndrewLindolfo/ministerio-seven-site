@@ -131,3 +131,7 @@ body.admin-dashboard-permissions-pending .admin-cards-grid{
 body.admin-dashboard-permissions-pending .admin-intro{
   visibility:hidden;
 }
+
+
+.field-help { display:block; margin-top:6px; font-size:12px; opacity:.75; }
+.programacao-hide-after { margin-top:6px; font-size:13px; opacity:.82; }

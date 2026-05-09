@@ -2,6 +2,7 @@ import { watchAuth, getAdminProfileByEmail } from "../auth.js";
 import { hasPermission } from "../services/admin-permissions-service.js";
 import { listAlbuns, saveAlbum, removeAlbum } from "../services/albuns-service.js";
 import { isGoogleDriveFileUrl, isGooglePhotosShortUrl } from "../utils/google-drive-links.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 function $(selector) {
   return document.querySelector(selector);
@@ -120,7 +121,8 @@ async function onSubmitAlbumForm(event) {
   try {
     const saveBtn = $("#album-save");
     if (saveBtn) saveBtn.disabled = true;
-    await saveAlbum(payload, id);
+    const savedId = await saveAlbum(payload, id);
+    await recordAdminActivity({ action: id ? "update" : "create", module: "fotos", itemId: savedId, itemName: payload.title });
     closeAlbumModal();
     await renderList();
   } catch (error) {
@@ -165,7 +167,11 @@ async function renderList() {
   box.querySelectorAll("[data-delete-id]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Excluir álbum?")) return;
-      await removeAlbum(btn.dataset.deleteId);
+      const id = btn.dataset.deleteId;
+      const allAlbums = await listAlbuns(false);
+      const item = allAlbums.find((x) => x.id === id);
+      await removeAlbum(id);
+      await recordAdminActivity({ action: "delete", module: "fotos", itemId: id, itemName: item?.title || "Álbum" });
       await renderList();
     });
   });

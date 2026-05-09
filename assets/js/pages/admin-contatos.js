@@ -1,6 +1,7 @@
 import { watchAuth, getAdminProfileByEmail } from "../auth.js";
 import { hasPermission } from "../services/admin-permissions-service.js";
 import { getCollection, updateDocument } from "../db.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 async function renderList() {
   const box = document.getElementById("admin-contatos-list");
@@ -23,7 +24,10 @@ async function renderList() {
 
   box.querySelectorAll("[data-mark-id]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      await updateDocument("contatos", btn.dataset.markId, { lido: true });
+      const id = btn.dataset.markId;
+      const item = ordered.find((entry) => entry.id === id);
+      await updateDocument("contatos", id, { lido: true });
+      await recordAdminActivity({ action: "update", module: "contatos", itemId: id, itemName: item?.assunto || item?.nome || "Contato", details: "Contato marcado como lido." });
       await renderList();
     });
   });

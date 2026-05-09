@@ -9,6 +9,10 @@ function escapeHtml(value = "") {
     .replaceAll('"', "&quot;");
 }
 
+function formatMultilineHtml(value = "") {
+  return escapeHtml(value).replace(/\r?\n/g, "<br>");
+}
+
 function formatDateTime(value = "") {
   if (!value) return "Sem data";
   const date = new Date(value);
@@ -65,7 +69,7 @@ async function renderPublicNotificacoesPage() {
                 <time>${escapeHtml(formatDateTime(item.startsAt || item.createdAt || ""))}</time>
               </div>
               <h3>${escapeHtml(item.title || "Sem título")}</h3>
-              <p>${escapeHtml(item.message || "")}</p>
+              <p>${formatMultilineHtml(item.message || "")}</p>
               ${item.buttonLink && item.buttonText ? `<a class="button-outline notificacao-link" href="${escapeHtml(item.buttonLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
             </article>
           `).join("")}

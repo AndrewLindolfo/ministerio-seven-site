@@ -2,6 +2,7 @@ import { watchAuth, getAdminProfileByEmail } from "../auth.js";
 import { hasPermission } from "../services/admin-permissions-service.js";
 import { listDownloads, saveDownload, removeDownload } from "../services/downloads-service.js";
 import { isGoogleDriveFileUrl, detectGoogleResourceType } from "../utils/google-drive-links.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 function $(selector) {
   return document.querySelector(selector);
@@ -158,7 +159,8 @@ async function onSubmitDownloadForm(event) {
   try {
     const saveBtn = $("#download-save");
     if (saveBtn) saveBtn.disabled = true;
-    await saveDownload(payload, id);
+    const savedId = await saveDownload(payload, id);
+    await recordAdminActivity({ action: id ? "update" : "create", module: "downloads", itemId: savedId, itemName: payload.title });
     closeDownloadModal();
     await renderList();
   } catch (error) {
@@ -199,7 +201,11 @@ async function renderList() {
   box.querySelectorAll("[data-delete-id]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Excluir download?")) return;
-      await removeDownload(btn.dataset.deleteId);
+      const id = btn.dataset.deleteId;
+      const allItems = await listDownloads(false);
+      const item = allItems.find((x) => x.id === id);
+      await removeDownload(id);
+      await recordAdminActivity({ action: "delete", module: "downloads", itemId: id, itemName: item?.title || "Download" });
       await renderList();
     });
   });

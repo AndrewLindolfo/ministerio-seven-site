@@ -1013,3 +1013,17 @@ html[data-theme="light"] .admin-topbar{
     min-height: 54px;
   }
 }
+
+
+.public-user-label {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+@media (max-width: 920px) {
+  .public-user-label {
+    display: none;
+  }
+}

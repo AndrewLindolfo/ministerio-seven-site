@@ -1,6 +1,7 @@
 import { watchAuth, getAdminProfileByEmail } from "../auth.js";
 import { hasPermission, isPrimaryAdmin, getAllowedCifraInstruments, canManageCifraInstrument } from "../services/admin-permissions-service.js";
 import { listCifras, removeCifra, getInstrumentLabel } from "../services/cifras-service.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 let currentAdmin = null;
 
@@ -167,6 +168,7 @@ async function renderCifras() {
       if (!selected) return;
       if (!confirm(`Deseja excluir a cifra de ${getInstrumentLabel(selected.instrumento || "violao")}?`)) return;
       await removeCifra(selected.id);
+      await recordAdminActivity({ action: "delete", module: "cifras", itemId: selected.id, itemName: selected.title || group.title || "Cifra", details: `Instrumento: ${getInstrumentLabel(selected.instrumento || "violao")}` });
       alert("🗑️ Cifra excluída com sucesso!");
       await renderCifras();
     });

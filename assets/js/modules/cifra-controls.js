@@ -87,10 +87,24 @@ function applyScrollPanelPos() {
 
   const stored = getStoredScrollPanelPos();
   if (!stored || typeof stored.left !== "number" || typeof stored.top !== "number") {
-    bubble.style.left = "";
-    bubble.style.top = "";
-    bubble.style.right = "8px";
-    bubble.style.bottom = "8px";
+    const anchor = document.getElementById("ver-letra-link")?.closest(".page-cross-link") ||
+                   document.getElementById("ver-letra-link") ||
+                   document.querySelector(".page-cross-link");
+    if (anchor) {
+      const rect = anchor.getBoundingClientRect();
+      const top = window.scrollY + rect.top - 6;
+      const left = window.scrollX + rect.right + 14;
+      const maxLeft = Math.max(window.scrollX + 8, window.scrollX + window.innerWidth - bubble.offsetWidth - 8);
+      bubble.style.left = `${clamp(left, window.scrollX + 8, maxLeft)}px`;
+      bubble.style.top = `${Math.max(window.scrollY + 8, top)}px`;
+      bubble.style.right = "auto";
+      bubble.style.bottom = "auto";
+      return;
+    }
+    bubble.style.left = `${Math.max(16, window.scrollX + ((window.innerWidth - bubble.offsetWidth) / 2))}px`;
+    bubble.style.top = `${Math.max(window.scrollY + 16, window.scrollY + 120)}px`;
+    bubble.style.right = "auto";
+    bubble.style.bottom = "auto";
     return;
   }
 
@@ -235,33 +249,45 @@ function renderMeta(meta, currentTom, originalTom, capo, bpm) {
   ensureOriginalResetAction();
 }
 
-function ensureSpeedLabel() {
+function ensureDesktopSpeedSlider() {
   const bubble = $("#scroll-bubble");
   if (!bubble) return null;
-  let label = document.getElementById("scroll-speed-label");
-  if (!label) {
-    label = document.createElement("span");
-    label.id = "scroll-speed-label";
-    const slowerBtn = $("#scroll-slower");
-    if (slowerBtn) slowerBtn.insertAdjacentElement("afterend", label);
+  let slider = document.getElementById("scroll-speed-slider");
+  if (!slider) {
+    slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "0.08";
+    slider.max = "1.20";
+    slider.step = "0.01";
+    slider.id = "scroll-speed-slider";
+    slider.className = "desktop-scroll-slider";
+    slider.setAttribute("aria-label", "Velocidade da rolagem");
+    const toggleBtn = $("#scroll-toggle");
+    if (toggleBtn) bubble.insertBefore(slider, toggleBtn.nextSibling);
+    else bubble.appendChild(slider);
+    slider.addEventListener("input", () => {
+      scrollSpeed = Number(slider.value || "0.35");
+      localStorage.setItem(SPEED_KEY, String(scrollSpeed));
+    });
   }
-  return label;
+  return slider;
+}
+
+function updateSpeedIndicator() {
+  const desktopSlider = ensureDesktopSpeedSlider();
+  if (desktopSlider) desktopSlider.value = String(scrollSpeed);
+
+  const mobileSlider = $("#scroll-bubble .mobile-scroll-slider");
+  if (mobileSlider) mobileSlider.value = String(scrollSpeed);
 }
 
 function updateScrollButton(isRunning) {
   const btn = $("#scroll-toggle");
-  if (btn) btn.textContent = isRunning ? "⏸" : "▶";
-}
-
-function updateSpeedIndicator() {
-  const label = ensureSpeedLabel();
-  if (label) {
-    const level = nearestSpeedIndex(scrollSpeed) + 1;
-    label.textContent = "";
-    label.dataset.level = String(level);
-    label.setAttribute("aria-label", `Velocidade ${level} de ${SPEED_STEPS.length}`);
-    label.title = `Velocidade ${level} de ${SPEED_STEPS.length}`;
-  }
+  if (!btn) return;
+  btn.dataset.state = isRunning ? "pause" : "play";
+  btn.setAttribute("aria-label", isRunning ? "Pausar rolagem" : "Iniciar rolagem");
+  btn.setAttribute("title", isRunning ? "Pausar rolagem" : "Iniciar rolagem");
+  btn.textContent = isRunning ? "⏸" : "▶";
 }
 
 function initMobileScrollBar() {
@@ -292,8 +318,8 @@ function initMobileScrollBar() {
   }
 
   slider.value = String(scrollSpeed);
+  ensureDesktopSpeedSlider();
 }
-
 
 function initResponsiveControlsAutoHide() {
   const controls = $(".cifra-top-controls");
@@ -618,7 +644,6 @@ export function initCifraControls() {
     localStorage.setItem(SCROLL_PANEL_VISIBLE_KEY, "0");
   }
 
-  ensureSpeedLabel();
   initMobileScrollBar();
   initScrollPanelDrag();
   initResponsiveControlsAutoHide();
@@ -634,8 +659,6 @@ export function initCifraControls() {
   $("#fullscreen-toggle")?.addEventListener("click", toggleFullscreen);
   $("#scroll-panel-toggle")?.addEventListener("click", toggleScrollPanel);
   $("#pdf-toggle")?.addEventListener("click", exportCifraPdf);
-  $("#scroll-faster")?.addEventListener("click", () => changeSpeed(1));
-  $("#scroll-slower")?.addEventListener("click", () => changeSpeed(-1));
   $("#scroll-toggle")?.addEventListener("click", toggleScroll);
   $("#scroll-bubble-close")?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); setScrollPanelVisible(false); });
 

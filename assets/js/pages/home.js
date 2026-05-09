@@ -2,6 +2,7 @@ import { listMusicas } from "../services/musicas-service.js";
 import { getSiteConfig } from "../services/config-service.js";
 import { renderProgramacaoCard } from "../modules/programacao-card.js";
 import { listHomeNotificacoes, getTopNotificacao } from "../services/notificacoes-service.js";
+import { listEnsaios } from "../services/ensaios-service.js";
 import { watchCollection } from "../db.js";
 
 let homeLiveUnsubscribes = [];
@@ -12,6 +13,10 @@ function escapeHtml(value = "") {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function formatMultilineHtml(value = "") {
+  return escapeHtml(value).replace(/\r?\n/g, "<br>");
 }
 
 
@@ -68,7 +73,7 @@ async function renderTopNotificacao() {
         <div class="top-notificacao-texts">
           <span class="notificacao-chip tipo-${escapeHtml(item.type || item.tipo || "aviso")}">${escapeHtml(item.type || item.tipo || "aviso")}</span>
           <strong>${escapeHtml(item.title || "Comunicado")}</strong>
-          <p>${escapeHtml(item.message || "")}</p>
+          <p>${formatMultilineHtml(item.message || "")}</p>
         </div>
         <div class="top-notificacao-actions">
           ${item.buttonLink && item.buttonText ? `<a class="button-outline top-notificacao-link" href="${escapeHtml(item.buttonLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
@@ -101,6 +106,49 @@ async function renderSevenPhoto() {
   }
 }
 
+
+async function loadEnsaio() {
+  const section = document.getElementById("ensaio-home-section");
+  const card = document.getElementById("ensaio-home-card");
+  if (!section || !card) return;
+
+  try {
+    const ensaios = (await listEnsaios())
+      .filter((item) => item && item.titulo)
+      .sort((a, b) => {
+        const aTime = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
+        const bTime = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
+        return bTime - aTime;
+      });
+
+    if (!ensaios.length) {
+      section.hidden = true;
+      card.innerHTML = "";
+      return;
+    }
+
+    section.hidden = false;
+    card.innerHTML = ensaios.map((ensaio) => {
+      const songs = Array.isArray(ensaio.musicas) ? ensaio.musicas : [];
+      const songsHtml = songs.length
+        ? `<ol class="programacao-list">${songs.map((song) => `<li>${escapeHtml(song.titulo || "")}</li>`).join("")}</ol>`
+        : '<p class="muted">Nenhuma música vinculada.</p>';
+
+      return `
+        <article class="programacao-box">
+          <h3>${escapeHtml(ensaio.titulo)}</h3>
+          ${ensaio.descricao ? `<p>${formatMultilineHtml(ensaio.descricao)}</p>` : ""}
+          ${songsHtml}
+        </article>
+      `;
+    }).join("");
+  } catch (error) {
+    console.error("Erro ao carregar ensaio da home:", error);
+    section.hidden = true;
+    card.innerHTML = "";
+  }
+}
+
 async function renderHomeNotificacoes() {
   const section = document.getElementById("notificacoes-home-section");
   const grid = document.getElementById("notificacoes-home-grid");
@@ -118,7 +166,7 @@ async function renderHomeNotificacoes() {
       <article class="home-notificacao-card tipo-${escapeHtml(item.type || item.tipo || "aviso")}">
         <span class="notificacao-chip tipo-${escapeHtml(item.type || item.tipo || "aviso")}">${escapeHtml(item.type || item.tipo || "aviso")}</span>
         <h3>${escapeHtml(item.title || "Sem título")}</h3>
-        <p>${escapeHtml(item.message || "")}</p>
+        <p>${formatMultilineHtml(item.message || "")}</p>
         ${item.buttonLink && item.buttonText ? `<a class="button-outline" href="${escapeHtml(item.buttonLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
       </article>
     `).join("");
@@ -164,6 +212,12 @@ function initHomeLiveUpdates() {
   );
 
   homeLiveUnsubscribes.push(
+    watchCollection("ensaios", async () => {
+      await loadEnsaio();
+    })
+  );
+
+  homeLiveUnsubscribes.push(
     watchCollection("notificacoes", async () => {
       await renderTopNotificacao();
       await renderHomeNotificacoes();
@@ -176,6 +230,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await renderTopNotificacao();
   await renderSevenPhoto();
   await renderProgramacaoCard();
+  await loadEnsaio();
   await renderHomeNotificacoes();
   await renderDestaques();
   initHomeLiveUpdates();

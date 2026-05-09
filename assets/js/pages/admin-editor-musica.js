@@ -3,6 +3,7 @@ import { hasPermission } from "../services/admin-permissions-service.js";
 import "../editor.js";
 import { getMusica, saveMusica, findDuplicateMusicaTitle, removeMusica } from "../services/musicas-service.js";
 import { explainFirebaseError } from "../db.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 const params = new URLSearchParams(window.location.search);
 const musicaId = params.get("id") || "";
@@ -91,8 +92,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         active: true
       };
 
-      await saveMusica(payload, musicaId);
-      alert("✅ Música cadastrada com sucesso!");
+      const savedId = await saveMusica(payload, musicaId);
+      await recordAdminActivity({
+        action: musicaId ? "update" : "create",
+        module: "musicas",
+        itemId: savedId,
+        itemName: title
+      });
+      alert(musicaId ? "✅ Música atualizada com sucesso!" : "✅ Música cadastrada com sucesso!");
       window.location.href = "./musicas.html";
     } catch (error) {
       console.error("Erro ao salvar música:", error);
@@ -110,7 +117,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       if (!confirm("Deseja excluir esta música?")) return;
+      const musicaName = document.getElementById("musica-titulo")?.value?.trim() || "Música";
       await removeMusica(musicaId);
+      await recordAdminActivity({ action: "delete", module: "musicas", itemId: musicaId, itemName: musicaName });
       alert("🗑️ Música excluída com sucesso!");
       window.location.href = "./musicas.html";
     } catch (error) {

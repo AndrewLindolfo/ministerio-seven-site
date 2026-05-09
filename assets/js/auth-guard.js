@@ -1,9 +1,5 @@
-import { watchAuth, getAdminProfileByEmail } from "./auth.js";
+import { watchAuth, validateAdminUser } from "./auth.js";
 import { canAccessAdminPage } from "./services/admin-permissions-service.js";
-
-function normalize(email = "") {
-  return String(email).trim().toLowerCase();
-}
 
 function resolveAdminPageKey() {
   const path = window.location.pathname.toLowerCase();
@@ -23,6 +19,7 @@ function resolveAdminPageKey() {
   if (path.endsWith("/admin/notificacoes.html")) return "notificacoes";
   if (path.endsWith("/admin/links.html")) return "links";
   if (path.endsWith("/admin/backup.html")) return "backup";
+  if (path.endsWith("/admin/logs.html")) return "logs";
   return "dashboard";
 }
 
@@ -34,15 +31,19 @@ export function protectAdminPage() {
     }
 
     try {
-      const admin = await getAdminProfileByEmail(normalize(user.email));
-      if (!admin) {
-        alert("Seu e-mail não está autorizado para acessar a área administrativa.");
+      const validation = await validateAdminUser(user);
+      if (!validation.ok) {
+        if (validation.reason === "uid-mismatch") {
+          alert("Este acesso administrativo está vinculado a outro UID. Faça login com a conta Google correta.");
+        } else {
+          alert("Seu e-mail não está autorizado para acessar a área administrativa.");
+        }
         window.location.href = "/login.html";
         return;
       }
 
       const pageKey = resolveAdminPageKey();
-      if (!canAccessAdminPage(admin, pageKey)) {
+      if (!canAccessAdminPage(validation.admin, pageKey)) {
         alert("Você não tem permissão para acessar esta página.");
         window.location.href = "/admin/index.html";
       }

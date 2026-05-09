@@ -231,6 +231,12 @@
 .scroll-panel-toggle-btn{
   position: relative;
   overflow: hidden;
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  min-width:38px;
+  min-height:38px;
+  padding:0 !important;
 }
 
 .scroll-panel-toggle-btn.is-active{
@@ -317,7 +323,9 @@
 }
 
 [data-theme="light"] .scroll-bubble{
-  border: 1px solid rgba(15,23,42,.12);
+  border: 1px solid rgba(15,23,42,.18);
+  outline: 1px solid rgba(15,23,42,.08);
+  outline-offset: 0;
   background: rgba(255,255,255,.95);
   box-shadow:
     0 14px 34px rgba(15,23,42,.12),
@@ -1698,5 +1706,104 @@
 
   .cifra-live-update-banner.hidden{
     display: none !important;
+  }
+}
+
+
+/* Redesign desktop da auto rolagem */
+@media (min-width: 1025px){
+  .scroll-bubble.is-hidden,
+  .scroll-bubble[hidden]{
+    display:none !important;
+  }
+  .scroll-bubble.is-open{
+    display:flex !important;
+  }
+  .scroll-bubble{
+    right:auto !important;
+    bottom:auto !important;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px !important;
+    border-radius:24px !important;
+    min-height:auto !important;
+    width:auto !important;
+    max-width:none !important;
+    background:rgba(14,16,28,.96) !important;
+    border:1px solid rgba(255,255,255,.10) !important;
+    box-shadow:0 16px 40px rgba(0,0,0,.35) !important;
+    backdrop-filter: blur(14px);
+    cursor:grab;
+  }
+  .scroll-bubble.is-dragging{ cursor:grabbing; }
+  .scroll-bubble #scroll-slower,
+  .scroll-bubble #scroll-faster,
+  .scroll-bubble #scroll-speed-label{
+    display:none !important;
+  }
+  .scroll-bubble .mobile-scroll-slider{
+    display:none !important;
+  }
+  .scroll-bubble .desktop-scroll-slider{
+    display:block !important;
+    width:120px;
+    accent-color:#f59b3a;
+  }
+  .scroll-bubble #scroll-toggle{
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    min-height:38px !important;
+    border-radius:50% !important;
+  }
+  .scroll-bubble .scroll-bubble-close{
+    position:absolute !important;
+    right:8px !important;
+    top:8px !important;
+    width:18px !important;
+    height:18px !important;
+    min-width:18px !important;
+    min-height:18px !important;
+    border-radius:50% !important;
+    font-size:11px !important;
+  }
+}
+
+
+/* Ajuste do redesign desktop da auto rolagem no modo claro da cifra */
+@media (min-width: 1025px){
+  [data-theme="light"] .scroll-bubble{
+    background: rgba(255,255,255,.96) !important;
+    border: 1px solid rgba(15,23,42,.12) !important;
+    box-shadow:
+      0 14px 34px rgba(15,23,42,.12),
+      inset 0 1px 0 rgba(255,255,255,.92) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble button{
+    color: #111827 !important;
+    background: rgba(255,255,255,.92) !important;
+    border: 1px solid rgba(15,23,42,.12) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble button:hover{
+    background: rgba(17,24,39,.07) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble #scroll-toggle{
+    color: #111827 !important;
+    background: rgba(255,255,255,.98) !important;
+    border-color: rgba(15,23,42,.12) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble .desktop-scroll-slider{
+    accent-color: #f59b3a;
+  }
+
+  [data-theme="light"] .scroll-bubble .scroll-bubble-close{
+    border-color: rgba(15,23,42,.12) !important;
+    background: rgba(255,255,255,.98) !important;
+    color: #111827 !important;
   }
 }

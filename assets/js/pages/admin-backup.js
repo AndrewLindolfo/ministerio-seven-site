@@ -1,6 +1,7 @@
 import { exportBackupJson } from "../services/backup-service.js";
 import { restoreBackupJson } from "../services/restore-service.js";
 import { explainFirebaseError } from "../db.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 function downloadJsonFile(data, filename) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -44,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await exportBackupJson();
       const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
       downloadJsonFile(data, `ministerio-seven-backup-${stamp}.json`);
+      await recordAdminActivity({ action: "export", module: "backup", itemId: stamp, itemName: `Backup ${stamp}`, details: "Backup exportado pelo painel administrativo." });
       alert("Backup gerado com sucesso.");
     } catch (error) {
       console.error("Erro ao fazer backup:", error);
@@ -69,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const text = await file.text();
       const json = JSON.parse(text);
       const summary = await restoreBackupJson(json);
+      await recordAdminActivity({ action: "import", module: "backup", itemId: file.name, itemName: file.name, details: "Backup restaurado pelo painel administrativo." });
       alert(buildRestoreMessage(summary));
     } catch (error) {
       console.error("Erro ao restaurar backup:", error);

@@ -5,6 +5,7 @@ import { setCifraEditorHtml, getCifraEditorPlainText, getCifraEditorHtml } from 
 import { listMusicas, getMusica } from "../services/musicas-service.js";
 import { getCifra, saveCifra, findDuplicateCifraInstrument, removeCifra } from "../services/cifras-service.js";
 import { explainFirebaseError } from "../db.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 const params = new URLSearchParams(window.location.search);
 const cifraId = params.get("id") || "";
@@ -206,8 +207,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         active: true
       };
 
-      await saveCifra(payload, cifraId);
-      alert("✅ Cifra cadastrada com sucesso!");
+      const savedId = await saveCifra(payload, cifraId);
+      await recordAdminActivity({
+        action: cifraId ? "update" : "create",
+        module: "cifras",
+        itemId: savedId,
+        itemName: `${title}${instrumento ? ` (${INSTRUMENT_LABELS[instrumento] || instrumento})` : ""}`
+      });
+      alert(cifraId ? "✅ Cifra atualizada com sucesso!" : "✅ Cifra cadastrada com sucesso!");
       window.location.href = "./cifras.html";
     } catch (error) {
       console.error("Erro ao salvar cifra:", error);
@@ -230,7 +237,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
       if (!confirm("Deseja excluir esta cifra?")) return;
+      const cifraName = document.getElementById("cifra-musica-search")?.value?.trim() || "Cifra";
       await removeCifra(cifraId);
+      await recordAdminActivity({ action: "delete", module: "cifras", itemId: cifraId, itemName: cifraName });
       alert("🗑️ Cifra excluída com sucesso!");
       window.location.href = "./cifras.html";
     } catch (error) {

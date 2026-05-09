@@ -1,10 +1,19 @@
-import { getCollection, getOneByField, setDocument, deleteDocument, serverTimestamp } from "../db.js";
+import { getCollection, getOneByField, getDocument, setDocument, deleteDocument, serverTimestamp } from "../db.js";
 
 function normalizeEmail(value = "") {
   return String(value || "").trim().toLowerCase();
 }
 
 export const ADMIN_COLLECTION = "admins";
+
+export const PRIMARY_ADMIN_DOC_ID = "master";
+
+export async function getPrimaryAdminDoc() {
+  const admin = await getDocument(ADMIN_COLLECTION, PRIMARY_ADMIN_DOC_ID);
+  if (!admin) return null;
+  if (admin.active === false || admin.ativo === false) return null;
+  return admin;
+}
 
 export const DEFAULT_PERMISSIONS = {
   musicas: { create: false, edit: false, delete: false },
@@ -17,7 +26,9 @@ export const DEFAULT_PERMISSIONS = {
   notificacoes: {
     create: false, edit: false, delete: false,
     popup: false, top: false, buttonLink: false, beforeStart: false
-  }
+  },
+  ensaios: { create: false, edit: false, delete: false },
+  logs: { view: false }
 };
 
 export function cloneDefaultPermissions() {
@@ -95,6 +106,8 @@ export function canAccessAdminPage(admin, pageKey = "") {
   switch (pageKey) {
     case "dashboard":
       return true;
+    case "logs":
+      return hasPermission(admin, "logs", "view");
     case "admins":
     case "links":
     case "backup":
@@ -125,6 +138,8 @@ export function canAccessAdminPage(admin, pageKey = "") {
       return hasAnyModulePermission(admin, "contatos");
     case "notificacoes":
       return hasAnyModulePermission(admin, "notificacoes");
+    case "ensaios":
+      return hasAnyModulePermission(admin, "ensaios");
     default:
       return true;
   }
@@ -140,10 +155,20 @@ export async function listAdmins() {
 export async function getAdminByEmail(email = "") {
   const normalized = normalizeEmail(email);
   if (!normalized) return null;
+
+  const primary = await getPrimaryAdminDoc();
+  if (primary && normalizeEmail(primary.email) === normalized) {
+    return primary;
+  }
+
   const admin = await getOneByField(ADMIN_COLLECTION, "email", normalized);
   if (!admin) return null;
   if (admin.active === false || admin.ativo === false) return null;
   return admin;
+}
+
+export function buildAdminDocIdFromEmail(email = "") {
+  return normalizeEmail(email).replace(/[^a-z0-9]/gi, "_").toLowerCase();
 }
 
 export async function saveSecondaryAdmin(payload = {}, existingId = "") {
@@ -154,17 +179,24 @@ export async function saveSecondaryAdmin(payload = {}, existingId = "") {
   }
 
   const maybeExisting = await getAdminByEmail(email);
-  const targetId = existingId || maybeExisting?.id || email.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+  const targetId = existingId || maybeExisting?.id || buildAdminDocIdFromEmail(email);
 
   const current = maybeExisting?.id === targetId ? maybeExisting : null;
+  const resolvedUid = String(payload.uid || current?.uid || maybeExisting?.uid || "").trim();
   const docData = {
     name,
     email,
     permissions: mergePermissions(DEFAULT_PERMISSIONS, payload.permissions || {}),
     isPrimary: false,
     active: payload.active !== false,
+    pendingUid: !resolvedUid,
     updatedAt: serverTimestamp()
   };
+
+  if (resolvedUid) {
+    docData.uid = resolvedUid;
+    docData.uidBoundAt = serverTimestamp();
+  }
 
   if (!current?.createdAt) docData.createdAt = serverTimestamp();
 

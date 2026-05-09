@@ -42,15 +42,19 @@ function clearCache() {
   } catch {}
 }
 
+function getMusicaDisplayTitle(item = {}) {
+  return String(item.title || item.titulo || item.nome || item.slug || "").trim();
+}
+
 function normalizeList(all = [], activeOnly = false) {
   return all
     .filter((item) => activeOnly ? item.active !== false : true)
-    .sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "pt-BR"));
+    .sort((a, b) => getMusicaDisplayTitle(a).localeCompare(getMusicaDisplayTitle(b), "pt-BR"));
 }
 
 export async function listMusicas(activeOnly = false) {
   const cached = readCache();
-  if (cached) {
+  if (cached && cached.length) {
     return normalizeList(cached, activeOnly);
   }
 

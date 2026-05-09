@@ -8,6 +8,10 @@ function escapeHtml(value = "") {
     .replaceAll('"', "&quot;");
 }
 
+function formatMultilineHtml(value = "") {
+  return escapeHtml(value).replace(/\r?\n/g, "<br>");
+}
+
 function getStorageKey(item) {
   return `seven_popup_notificacao_${item.id}`;
 }
@@ -63,7 +67,7 @@ function renderPopup(item) {
       <button type="button" class="notificacao-popup-close" aria-label="Fechar">✕</button>
       <span class="notificacao-popup-chip">${meta.icon} ${escapeHtml(meta.label)}</span>
       <h3 class="notificacao-popup-title">${escapeHtml(item.title || "Notificação")}</h3>
-      <p class="notificacao-popup-message">${escapeHtml(item.message || "")}</p>
+      <p class="notificacao-popup-message">${formatMultilineHtml(item.message || "")}</p>
       <div class="notificacao-popup-actions">
         ${item.buttonLink && item.buttonText ? `<a class="button-primary" href="${escapeHtml(item.buttonLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
         <button type="button" class="button-outline notificacao-popup-dismiss">Fechar</button>

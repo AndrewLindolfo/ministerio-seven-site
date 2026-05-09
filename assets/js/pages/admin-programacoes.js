@@ -3,6 +3,7 @@ import { hasPermission, isPrimaryAdmin } from "../services/admin-permissions-ser
 import { listProgramacoes, getProgramacao, saveProgramacao, removeProgramacao } from "../services/programacoes-service.js";
 import { listMusicas } from "../services/musicas-service.js";
 import { listCifras } from "../services/cifras-service.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 function $(selector) {
   return document.querySelector(selector);
@@ -138,6 +139,29 @@ function renderAvailableSongs(term = "") {
   });
 }
 
+
+function toDatetimeLocalValue(value) {
+  if (!value) return "";
+  const d = coerceDate(value);
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+}
+
+function fmtHideAfter(value) {
+  if (!value) return "";
+  const d = coerceDate(value);
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return String(value);
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(d);
+}
+
 function ensureModal() {
   if ($("#programacao-modal")) return;
 
@@ -180,6 +204,14 @@ function ensureModal() {
           <span>Descrição</span>
           <textarea id="programacao-description" rows="3" placeholder="Observações da programação"></textarea>
         </label>
+
+        <div class="programacao-grid">
+          <label>
+            <span>Ocultar após</span>
+            <input type="time" id="programacao-hide-after" />
+            <small class="field-help">Deixe em branco para ocultar automaticamente quando a data/hora da programação passar.</small>
+          </label>
+        </div>
 
         <div class="programacao-song-picker">
           <div class="programacao-song-picker-header">
@@ -232,6 +264,7 @@ function openModal(data = null) {
   $("#programacao-time").value = data?.time || "";
   $("#programacao-location").value = data?.location || "";
   $("#programacao-description").value = data?.description || "";
+  $("#programacao-hide-after").value = toDatetimeLocalValue(data?.hideAfter || "");
   $("#programacao-modal-title").textContent = data?.id ? "Editar programação" : "Nova programação";
   $("#programacao-song-search").value = "";
 
@@ -284,7 +317,8 @@ async function onSubmitForm(event) {
     const saveBtn = $("#programacao-save");
     if (saveBtn) saveBtn.disabled = true;
 
-    await saveProgramacao(payload, id);
+    const savedId = await saveProgramacao(payload, id);
+    await recordAdminActivity({ action: id ? "update" : "create", module: "programacoes", itemId: savedId, itemName: payload.title });
     closeModal();
     await renderProgramacoes();
   } catch (error) {
@@ -314,7 +348,9 @@ async function onDeleteProgramacao(id) {
   if (!confirm("Deseja excluir esta programação?")) return;
 
   try {
+    const item = await getProgramacao(id);
     await removeProgramacao(id);
+    await recordAdminActivity({ action: "delete", module: "programacoes", itemId: id, itemName: item?.title || "Programação" });
     await renderProgramacoes();
   } catch (error) {
     console.error(error);
@@ -364,6 +400,7 @@ async function renderProgramacoes() {
         <div class="programacao-admin-main">
           <h3>${escapeHtml(item.title || "Sem título")}</h3>
           <p>${escapeHtml(fmtDate(item.date))} • ${escapeHtml(item.time || "--:--")}${item.location ? " • " + escapeHtml(item.location) : ""}</p>
+          ${item.hideAfter ? `<p class="programacao-hide-after">Ocultar após: ${escapeHtml(fmtHideAfter(item.hideAfter))}</p>` : ""}
           ${item.description ? `<small>${escapeHtml(item.description)}</small>` : ""}
           ${buildSongsPreview(item.songs || [])}
         </div>

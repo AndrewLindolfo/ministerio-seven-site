@@ -19,6 +19,28 @@ function toLocalDateTime(dateStr = "", timeStr = "") {
   return new Date(year, month, day, hours, minutes, 0, 0);
 }
 
+function getHideAfterDate(item) {
+  const value = String(item?.hideAfter || "").trim();
+  if (!value) return null;
+
+  if (/^\d{2}:\d{2}$/.test(value)) {
+    return toLocalDateTime(item?.date, value);
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isProgramacaoVisible(item) {
+  const now = Date.now();
+  const hideAfter = getHideAfterDate(item);
+  if (hideAfter) return hideAfter.getTime() >= now;
+
+  const dt = toLocalDateTime(item?.date, item?.time);
+  if (!dt) return false;
+  return dt.getTime() >= now;
+}
+
 function sortByDateTimeAsc(list = []) {
   return [...list].sort((a, b) => {
     const ad = toLocalDateTime(a.date, a.time);
@@ -40,15 +62,8 @@ export async function listProgramacoes(activeOnly = false) {
 
 export async function listUpcomingProgramacoes() {
   const all = await listProgramacoes(true);
-  const now = new Date();
-
-  const upcoming = all.filter((item) => {
-    const dt = toLocalDateTime(item.date, item.time);
-    if (!dt) return false;
-    return dt.getTime() >= now.getTime();
-  });
-
-  return sortByDateTimeAsc(upcoming);
+  const visible = all.filter((item) => isProgramacaoVisible(item));
+  return sortByDateTimeAsc(visible);
 }
 
 export async function getProgramacao(id) {
@@ -62,6 +77,7 @@ export async function saveProgramacao(payload, id = "") {
     time: payload.time || "",
     location: payload.location || "",
     description: payload.description || "",
+    hideAfter: payload.hideAfter || "",
     songs: Array.isArray(payload.songs) ? payload.songs : [],
     active: payload.active !== false,
     updatedAt: serverTimestamp()

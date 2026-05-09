@@ -14,10 +14,13 @@ function resolveCardVisibility(admin, key = "") {
     case "downloads": return canAccessAdminPage(admin, "downloads");
     case "contatos": return canAccessAdminPage(admin, "contatos");
     case "notificacoes": return canAccessAdminPage(admin, "notificacoes");
+    case "ensaios": return canAccessAdminPage(admin, "ensaios");
     case "links":
     case "backup":
     case "admins":
       return isPrimaryAdmin(admin);
+    case "logs":
+      return canAccessAdminPage(admin, "logs");
     default:
       return true;
   }

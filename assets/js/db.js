@@ -1,4 +1,4 @@
-import { db } from "./firebase.js";
+import { app, auth, db, storage } from "./firebase.js";
 import {
   collection,
   addDoc,
@@ -125,3 +125,6 @@ export function watchCollection(collectionName, callback, options = {}, onError 
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   }, onError || ((error) => console.error("Erro ao observar coleção:", error)));
 }
+
+
+export { app, auth, db, storage };

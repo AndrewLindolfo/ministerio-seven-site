@@ -3,6 +3,7 @@ import { hasPermission } from "../services/admin-permissions-service.js";
 import { listMusicas } from "../services/musicas-service.js";
 import { listDownloadsByMusic, saveDownloadByMusic, removeDownloadByMusic } from "../services/downloads-music-service.js";
 import { isGoogleDriveFileUrl } from "../utils/google-drive-links.js";
+import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 function $(selector) {
   return document.querySelector(selector);
@@ -112,7 +113,9 @@ async function onSubmitForm(event) {
 
   try {
     $("#download-music-save").disabled = true;
-    await saveDownloadByMusic(payload, $("#download-music-id").value.trim());
+    const currentId = $("#download-music-id").value.trim();
+    const savedId = await saveDownloadByMusic(payload, currentId);
+    await recordAdminActivity({ action: currentId ? "update" : "create", module: "downloads_por_musica", itemId: savedId, itemName: payload.title });
     closeModal();
     await renderList();
   } catch (error) {
@@ -157,7 +160,11 @@ async function renderList() {
   box.querySelectorAll("[data-delete-id]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Excluir download por música?")) return;
-      await removeDownloadByMusic(btn.dataset.deleteId);
+      const id = btn.dataset.deleteId;
+      const allItems = await listDownloadsByMusic(false);
+      const item = allItems.find((x) => x.id === id);
+      await removeDownloadByMusic(id);
+      await recordAdminActivity({ action: "delete", module: "downloads_por_musica", itemId: id, itemName: item?.title || "Download por música" });
       await renderList();
     });
   });
