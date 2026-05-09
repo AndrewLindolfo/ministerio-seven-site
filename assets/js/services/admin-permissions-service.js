@@ -140,6 +140,10 @@ export function canAccessAdminPage(admin, pageKey = "") {
       return hasAnyModulePermission(admin, "notificacoes");
     case "ensaios":
       return hasAnyModulePermission(admin, "ensaios");
+    case "editor-ensaio-create":
+      return hasPermission(admin, "ensaios", "create");
+    case "editor-ensaio-edit":
+      return hasPermission(admin, "ensaios", "edit");
     default:
       return true;
   }

@@ -28,7 +28,9 @@ export function applyTheme(theme) {
 
   const adminV7 = $$(".admin-v7");
   adminV7.forEach((img) => {
-    img.src = "../assets/img/v7/icon_120.png";
+    img.src = isLight
+      ? "../assets/img/v7/icon_light.png"
+      : "../assets/img/v7/icon_dark.png";
   });
 }
 

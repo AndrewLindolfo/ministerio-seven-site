@@ -11,6 +11,8 @@ function resolveAdminPageKey() {
   if (path.endsWith("/admin/cifras.html")) return "cifras";
   if (path.endsWith("/admin/editor-cifra.html")) return params.get("id") ? "editor-cifra-edit" : "editor-cifra-create";
   if (path.endsWith("/admin/programacoes.html")) return "programacoes";
+  if (path.endsWith("/admin/ensaios.html")) return "ensaios";
+  if (path.endsWith("/admin/editor-ensaio.html")) return params.get("id") ? "editor-ensaio-edit" : "editor-ensaio-create";
   if (path.endsWith("/admin/fotos.html")) return "fotos";
   if (path.endsWith("/admin/downloads.html")) return "downloads";
   if (path.endsWith("/admin/downloads-geral.html")) return "downloads-geral";

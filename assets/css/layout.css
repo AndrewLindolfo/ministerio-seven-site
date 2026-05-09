@@ -242,8 +242,9 @@ html[data-theme="light"] .admin-topbar{
 }
 
 .admin-v7{
-  width:36px;
-  height:36px;
+  width:auto;
+  height:46px;
+  display:block;
 }
 
 .admin-account{position:relative}
@@ -253,8 +254,21 @@ html[data-theme="light"] .admin-topbar{
   background:transparent;
   color:var(--text);
   min-height:42px;
-  padding:0 16px;
+  min-width:42px;
+  padding:0;
   border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.admin-account-toggle-photo{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
 }
 
 .admin-account-menu{

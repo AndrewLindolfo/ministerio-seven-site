@@ -4,20 +4,24 @@ import { logout, watchAuth } from "../auth.js";
 function fillAdminUser(user) {
   const emailEls = $$("#admin-user-email");
   const photoEls = $$("#admin-user-photo");
+  const toggle = $("#admin-account-toggle");
+  const photoSrc = user?.photoURL || "../assets/img/v7/icon_120.png";
+  const altText = user?.displayName || user?.email || "Conta";
 
   emailEls.forEach((el) => {
     el.textContent = user?.email || "";
   });
 
   photoEls.forEach((el) => {
-    if (user?.photoURL) {
-      el.src = user.photoURL;
-    } else {
-      el.src = "../assets/img/v7/icon_120.png";
-    }
-
-    el.alt = user?.displayName || user?.email || "Conta";
+    el.src = photoSrc;
+    el.alt = altText;
   });
+
+  if (toggle) {
+    toggle.innerHTML = `<img src="${photoSrc}" alt="${altText}" class="admin-account-toggle-photo" />`;
+    toggle.setAttribute("aria-label", altText);
+    toggle.title = altText;
+  }
 }
 
 function ensureAdminViewSiteLink(menu) {
